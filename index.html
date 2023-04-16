@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerando Latitude e longitude</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" 
+     integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+     crossorigin=""/> <!--link do CSS-->
+  <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+     integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
+     crossorigin=""></script> <!--Link do JS que necessita ir depois do CSS-->
+
+
+  <style>
+
+      #MapISS { 
+        height: 500px; 
+        width: 500px;
+        } /*O MAPA NECESSITA DE UMA ALTURA PRÉ-DEFINIDA DENTRO DO CSS*/
+
+  </style>
+
+</head>
+<body>
+  <h1>Gerador de latitude e longitude</h1>
+  <p>A latitude é <span id="lat"></span>°</p>
+  <p>A longitude é <span id="log"></span>°</p>
+
+  <div id="MapISS"></div>
+
+  <script>
+
+  const map = L.map('MapISS').setView([0, 0], 1); // setView([latitude,longitude],nivel de zoom)
+  const marcacao = L.marker([0, 0]).addTo(map);
+
+  const attribution = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'; //aqui vai o repositório de blocos para o mapeamento
+  
+  const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const blocos = L.tileLayer(tileUrl, { attribution }); //para chamar qualquer função dentro da biblioteca do leafle, você coloca esse L em maiúsculo. tilesLayer precisa de duas coisas: Url dos blocos e atribuição. no caso tem {} pois está esperando na forma de objeto
+  blocos.addTo(map); //adicionar os blocos no mapa
+
+  const api_url = 'https://api.wheretheiss.at/v1/satellites/25544';
+
+  let firsttime = true;
+
+    async function getISS(){
+      const resposta = await fetch(api_url);
+      const pacote = await resposta.json(); //converter a respota para um json
+      console.log(pacote.latitude);
+      console.log(pacote.longitude);
+
+    //L.marker([pacote.latitude, pacote.longitude]).addTo(map);
+    marcacao.setLatLng( [pacote.latitude, pacote.longitude] );
+
+    if(firsttime){
+    map.setView([pacote.latitude, pacote.longitude],3);
+    firsttime = false;
+  }
+      document.getElementById('lat').textContent = pacote.latitude.toFixed(2);
+      document.getElementById('log').textContent = pacote.longitude.toFixed(2);
+    }
+    
+    getISS();
+
+    setInterval(getISS, 1000);
+
+  </script>
+</body>
+</html>
